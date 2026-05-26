@@ -1,0 +1,320 @@
+/* ======================================================================
+   style.qss — Thème CodeDojo Zen Sage (Pixel/Chunky Aesthetic)
+   Palette tirée de l'image de garde : Vert Sauge, Olive et Chocolat
+   ====================================================================== */
+
+/* ─── Globals ─────────────────────────────────────────────────────────── */
+QMainWindow, QWidget#centralWidget {
+    background: #CCD49F; /* Sage green background from welcome screen */
+    color: #4E533C;      /* Chocolate dark olive text from logo */
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+}
+
+/* ─── Chunky Buttons (Commencer / Actions) ─────────────────────────── */
+QPushButton {
+    background: #8D9078; /* Sage olive button color from provided image */
+    color: #FCFBF5;      /* Warm cream text */
+    font-weight: bold;
+    font-size: 14px;
+    border: 3px solid #4E533C;
+    border-radius: 12px;
+    border-bottom: 6px solid #4E533C; /* Chunky 3D effect */
+    padding: 6px 16px;
+}
+QPushButton:hover {
+    background: #9FA28A;
+    color: #FFFFFF;
+}
+QPushButton:pressed {
+    border-bottom: 3px solid #4E533C;
+    margin-top: 3px; /* Simulate pressing */
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────── */
+QWidget#header {
+    background: #F5F7EC; /* Solid Sage Cream */
+    border: 3px solid #4E533C;
+    border-radius: 16px;
+    border-bottom: 6px solid #4E533C;
+    padding: 0px 10px;
+}
+QLabel#header_logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #4E533C;
+    letter-spacing: 2px;
+}
+QLabel#timer_label {
+    font-family: 'Consolas', monospace;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4E533C;
+    background: #E5E8D6;
+    border-radius: 8px;
+    padding: 2px 10px;
+}
+QLabel#points_label, QLabel#level_label, QLabel#user_label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #4E533C;
+}
+QPushButton#timer_btn, QPushButton#toggle_btn_header, QPushButton#settings_header_btn, QPushButton#logout_header_btn {
+    border-width: 2px;
+    border-bottom-width: 4px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: #E5E8D6;
+    color: #4E533C;
+}
+QPushButton#timer_btn:hover, QPushButton#toggle_btn_header:hover, QPushButton#settings_header_btn:hover, QPushButton#logout_header_btn:hover {
+    background: #F5F7EC;
+}
+
+/* ─── Panels (Left, Center, Right) ────────────────────────────────────── */
+QWidget#left_panel, QWidget#center_panel, QWidget#right_panel {
+    background: #F5F7EC; /* Solid Sage Cream */
+    border: 4px solid #4E533C;
+    border-radius: 16px;
+    border-bottom: 8px solid #4E533C;
+}
+
+QLabel#panel_header {
+    background: transparent;
+    color: #4E533C;
+    font-weight: bold;
+    font-size: 16px;
+    border-bottom: 3px solid #4E533C;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 10px;
+}
+QLabel#panel_sub {
+    background: #E5E8D6;
+    color: #4E533C;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 2px solid #4E533C;
+    padding: 6px 12px;
+}
+QLabel#panel_footer {
+    background: #E5E8D6;
+    color: #4E533C;
+    font-size: 11px;
+    border-top: 2px solid #4E533C;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    padding: 8px 12px;
+}
+
+/* ─── Challenge List ──────────────────────────────────────────────────── */
+QListWidget#challenge_list {
+    background: transparent;
+    border: none;
+    outline: none;
+    margin: 5px;
+}
+QListWidget#challenge_list::item {
+    background: #FFFFFF;
+    color: #4E533C;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 12px;
+    border: 2px solid #4E533C;
+    border-bottom: 4px solid #4E533C;
+    border-radius: 10px;
+    margin: 4px 6px;
+}
+QListWidget#challenge_list::item:hover {
+    background: #F0F2E8;
+}
+QListWidget#challenge_list::item:selected {
+    background: #CCD49F;
+    color: #4E533C;
+    border-color: #4E533C;
+    border-bottom-color: #4E533C;
+}
+
+/* ─── Code Editor ─────────────────────────────────────────────────────── */
+QLabel#desc_label {
+    background: transparent;
+    color: #4E533C;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 10px;
+    border-bottom: 2px solid #4E533C;
+}
+QPlainTextEdit#code_editor {
+    background: #FFFFFF;
+    color: #2C2820;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+    border: 2px inset #4E533C;
+    border-radius: 8px;
+    margin: 10px;
+    padding: 8px;
+}
+QWidget#submit_bar {
+    background: transparent;
+    border-top: 2px solid #4E533C;
+}
+QLabel#char_count {
+    color: #8D9078;
+    font-size: 12px;
+    font-weight: bold;
+}
+QPushButton#submit_btn {
+    background: #CCD49F;
+    color: #4E533C;
+    border-color: #4E533C;
+    border-bottom-color: #4E533C;
+}
+QPushButton#submit_btn:hover {
+    background: #DCE3B5;
+}
+
+/* ─── Chat AI ─────────────────────────────────────────────────────────── */
+QScrollArea#chat_scroll {
+    background: transparent;
+    border: none;
+}
+QWidget#chat_container { background: transparent; }
+
+QLabel#bubble_sensei {
+    background: #EAE6D8; /* Cozy warm beige-sable */
+    border: 2px solid #4E533C;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    color: #4E533C;
+}
+QLabel#bubble_user {
+    background: #CCD49F; /* Welcome green background */
+    border: 2px solid #4E533C;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    color: #4E533C;
+}
+QLabel#bubble_thinking {
+    background: #E5E8D6;
+    border: 2px dashed #4E533C;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 12px;
+    color: #8D9078;
+}
+QLabel#success_banner {
+    background: #CCD49F;
+    color: #4E533C;
+    border: 3px solid #4E533C;
+    border-radius: 12px;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+/* ─── Login Window ────────────────────────────────────────────────────── */
+QLabel#torii {
+    font-size: 42px;
+    color: #8D9078;
+}
+QLabel#login_title {
+    font-size: 38px;
+    font-weight: bold;
+    color: #4E533C;
+    letter-spacing: 2px;
+}
+QLabel#login_tagline {
+    font-size: 14px;
+    color: #8D9078;
+    letter-spacing: 3px;
+    font-weight: bold;
+}
+QFrame#login_card {
+    background: #F5F7EC;
+    border: 4px solid #4E533C;
+    border-bottom: 8px solid #4E533C;
+    border-radius: 24px;
+}
+QLabel#field_lbl, QLabel#field_lbl_pass {
+    font-size: 13px;
+    font-weight: bold;
+    color: #8D9078;
+}
+QLineEdit#field_input, QLineEdit#field_input_pass {
+    background: #FFFFFF;
+    border: 2px solid #4E533C;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #4E533C;
+    font-weight: bold;
+}
+QLineEdit#field_input:focus {
+    border-color: #4E533C;
+}
+QPushButton#btn_primary {
+    background: #CCD49F;
+    color: #4E533C;
+    border-color: #4E533C;
+    border-bottom-color: #4E533C;
+}
+QPushButton#btn_secondary {
+    background: #F5F7EC;
+    color: #8D9078;
+}
+QLabel#feedback_msg {
+    font-size: 13px;
+    font-weight: bold;
+    color: #8D9078;
+}
+QLabel#login_footer {
+    font-size: 11px;
+    color: #8D9078;
+    font-weight: bold;
+}
+
+/* ─── Verification Button & Terminal ─────────────────────── */
+QPushButton#verify_btn {
+    background: #EAE6D8; /* Lilac/cream accent */
+    color: #4E533C;
+    font-weight: bold;
+    font-size: 14px;
+    border: 3px solid #4E533C;
+    border-radius: 12px;
+    border-bottom: 6px solid #4E533C;
+    padding: 6px 16px;
+}
+QPushButton#verify_btn:hover {
+    background: #F0ECE0;
+    color: #4E533C;
+}
+QPushButton#verify_btn:pressed {
+    border-bottom: 3px solid #4E533C;
+    margin-top: 3px;
+}
+
+QLabel#verification_bubble {
+    background: #1A1A1E; /* Dark retro terminal background */
+    color: #F8F8F2;      /* Clear off-white console text */
+    border: 3px solid #4E533C;
+    border-bottom: 6px solid #4E533C;
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────── */
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+}
+QScrollBar::handle:vertical {
+    background: #8D9078;
+    border-radius: 5px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical { height: 0px; }
