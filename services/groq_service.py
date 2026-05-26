@@ -88,7 +88,7 @@ class GroqService:
             },
             "generationConfig": {
                 "temperature": 0.7,
-                "maxOutputTokens": 350
+                "maxOutputTokens": 400
             }
         }
 
@@ -128,9 +128,9 @@ class GroqService:
         messages.append({"role": "user", "content": user_msg})
 
         response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             messages=messages,
-            max_tokens=300,
+            max_tokens=400,
             temperature=0.7,
         )
         return response.choices[0].message.content

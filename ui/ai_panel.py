@@ -22,10 +22,10 @@ class AIPanel(QWidget):
         hdr.setFixedHeight(40)
         lay.addWidget(hdr)
 
-        sub = QLabel("  Groq · LLaMA 3 · Méthode socratique",
+        self.sub_lbl = QLabel("  IA · Méthode socratique",
                      objectName="panel_sub")
-        sub.setFixedHeight(26)
-        lay.addWidget(sub)
+        self.sub_lbl.setFixedHeight(26)
+        lay.addWidget(self.sub_lbl)
 
         self.scroll = QScrollArea(objectName="chat_scroll")
         self.scroll.setWidgetResizable(True)
@@ -49,6 +49,10 @@ class AIPanel(QWidget):
                   "et des questions, sans jamais te donner\n"
                   "la réponse directement.\n\n"
                   "一歩一歩 — Un pas à la fois. 🥋")
+
+    def set_provider_label(self, label: str):
+        """Update the subtitle to reflect the active AI provider."""
+        self.sub_lbl.setText(f"  {label}")
 
     def _add(self, role: str, text: str):
         prefix = "🧘 Sensei" if role == "sensei" else "🥋 Toi"
@@ -92,6 +96,17 @@ class AIPanel(QWidget):
         lbl = QLabel(f"✅  +{points} pts gagnés !  🏆",
                      objectName="success_banner")
         lbl.setAlignment(Qt.AlignCenter)
+        self.chat_lay.insertWidget(self.chat_lay.count() - 1, lbl)
+        self._scroll_bottom()
+
+    def show_already_solved(self):
+        """Shown when the user re-solves a challenge they already completed."""
+        lbl = QLabel(
+            "🔄  Déjà résolu — bonne pratique !  (pas de points supplémentaires)",
+            objectName="already_solved_banner"
+        )
+        lbl.setAlignment(Qt.AlignCenter)
+        lbl.setWordWrap(True)
         self.chat_lay.insertWidget(self.chat_lay.count() - 1, lbl)
         self._scroll_bottom()
 

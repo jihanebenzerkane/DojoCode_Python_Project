@@ -23,9 +23,15 @@ def main():
     try:
         from ui.settings_dialog import load_settings
         cfg = load_settings()
-        if cfg.get("api_key"):
-            os.environ["GEMINI_API_KEY"] = cfg["api_key"]
-            os.environ["GROQ_API_KEY"] = cfg["api_key"]
+        api_key = cfg.get("api_key", "").strip()
+        if api_key:
+            # Route the key to the correct provider based on prefix
+            if api_key.startswith("AIzaSy"):
+                os.environ["GEMINI_API_KEY"] = api_key
+                os.environ.pop("GROQ_API_KEY", None)
+            else:
+                os.environ["GROQ_API_KEY"] = api_key
+                os.environ.pop("GEMINI_API_KEY", None)
     except Exception as e:
         print(f"[Main] Erreur chargement settings : {e}")
 

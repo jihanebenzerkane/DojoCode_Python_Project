@@ -229,6 +229,222 @@ class MySQLRepository:
             self.connection.rollback()
             return False
 
+    # ── SOLVED-ONCE TRACKING ─────────────────────────────────────────────────
+
+    def has_solved(self, user_id: int, challenge_id: int) -> bool:
+        """Returns True if this user has already solved this challenge before."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT 1 FROM user_solved_challenges "
+                "WHERE user_id = %s AND challenge_id = %s LIMIT 1",
+                (user_id, challenge_id)
+            )
+            found = cursor.fetchone() is not None
+            cursor.close()
+            return found
+        except Error as e:
+            print(f"[DB] Erreur has_solved : {e}")
+            return False
+
+    def mark_challenge_solved(self, user_id: int, challenge_id: int) -> bool:
+        """
+        Permanently records that this user solved this challenge.
+        Uses INSERT IGNORE so re-solves are safely no-ops.
+        Returns True if it was a NEW solve (first time), False if already solved.
+        """
+        self._ensure_connection()
+        if not self.is_connected():
+            return False
+        if self.has_solved(user_id, challenge_id):
+            return False  # already solved — caller must NOT award points again
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT IGNORE INTO user_solved_challenges (user_id, challenge_id) "
+                "VALUES (%s, %s)",
+                (user_id, challenge_id)
+            )
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Error as e:
+            print(f"[DB] Erreur mark_challenge_solved : {e}")
+            self.connection.rollback()
+            return False
+
+    def get_solved_challenge_ids(self, user_id: int) -> set:
+        """Returns the set of challenge IDs already solved by this user."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return set()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT challenge_id FROM user_solved_challenges WHERE user_id = %s",
+                (user_id,)
+            )
+            ids = {row[0] for row in cursor.fetchall()}
+            cursor.close()
+            return ids
+        except Error as e:
+            print(f"[DB] Erreur get_solved_challenge_ids : {e}")
+            return set()
+
+    def count_solved(self, user_id: int) -> int:
+        """Returns the total number of challenges this user has solved."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return 0
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM user_solved_challenges WHERE user_id = %s",
+                (user_id,)
+            )
+            count = cursor.fetchone()[0]
+            cursor.close()
+            return count
+        except Error as e:
+            print(f"[DB] Erreur count_solved : {e}")
+            return 0
+
+    def count_solved_by_points(self, user_id: int, points: int) -> int:
+        """Returns how many challenges of a given point-value the user has solved."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return 0
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM user_solved_challenges usc "
+                "JOIN challenges c ON c.id = usc.challenge_id "
+                "WHERE usc.user_id = %s AND c.points = %s",
+                (user_id, points)
+            )
+            count = cursor.fetchone()[0]
+            cursor.close()
+            return count
+        except Error as e:
+            print(f"[DB] Erreur count_solved_by_points : {e}")
+            return 0
+
+    def count_challenges_by_points(self, points: int) -> int:
+        """Returns total number of challenges with the given point value."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return 0
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM challenges WHERE points = %s", (points,)
+            )
+            count = cursor.fetchone()[0]
+            cursor.close()
+            return count
+        except Error as e:
+            print(f"[DB] Erreur count_challenges_by_points : {e}")
+            return 0
+
+    # ── ACHIEVEMENTS ──────────────────────────────────────────────────────────
+
+    def get_all_achievements(self) -> List[dict]:
+        """Returns the full achievement catalogue."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return []
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM achievements ORDER BY id ASC")
+            rows = cursor.fetchall()
+            cursor.close()
+            return rows
+        except Error as e:
+            print(f"[DB] Erreur get_all_achievements : {e}")
+            return []
+
+    def get_user_achievement_ids(self, user_id: int) -> set:
+        """Returns the set of achievement IDs already earned by this user."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return set()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT achievement_id FROM user_achievements WHERE user_id = %s",
+                (user_id,)
+            )
+            ids = {row[0] for row in cursor.fetchall()}
+            cursor.close()
+            return ids
+        except Error as e:
+            print(f"[DB] Erreur get_user_achievement_ids : {e}")
+            return set()
+
+    def award_achievement(self, user_id: int, achievement_id: int) -> bool:
+        """
+        Awards an achievement to a user.
+        INSERT IGNORE means it's safe to call multiple times — only fires once.
+        Returns True if it was newly awarded, False if already had it.
+        """
+        self._ensure_connection()
+        if not self.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (%s, %s)",
+                (user_id, achievement_id)
+            )
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Error as e:
+            print(f"[DB] Erreur award_achievement : {e}")
+            self.connection.rollback()
+            return False
+
+    def get_achievement_by_code(self, code: str) -> Optional[dict]:
+        """Fetches a single achievement row by its code."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return None
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT * FROM achievements WHERE code = %s LIMIT 1", (code,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            return row
+        except Error as e:
+            print(f"[DB] Erreur get_achievement_by_code : {e}")
+            return None
+
+    def get_session_elapsed_seconds(self, session_id: int) -> Optional[int]:
+        """Returns seconds elapsed since session started (for speed achievements)."""
+        self._ensure_connection()
+        if not self.is_connected():
+            return None
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT TIMESTAMPDIFF(SECOND, started_at, NOW()) "
+                "FROM challenge_sessions WHERE id = %s",
+                (session_id,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            return row[0] if row else None
+        except Error as e:
+            print(f"[DB] Erreur get_session_elapsed_seconds : {e}")
+            return None
+
     def close(self):
         """Ferme la connexion proprement."""
         if self.is_connected():

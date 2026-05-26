@@ -48,9 +48,14 @@ def save_settings(data: dict):
     try:
         with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
-        # Mettre à jour l'environnement pour les appels en cours
-        os.environ["GEMINI_API_KEY"] = data["api_key"]
-        os.environ["GROQ_API_KEY"] = data["api_key"]
+        # Route the key to the correct provider env var based on its prefix
+        api_key = data.get("api_key", "").strip()
+        if api_key.startswith("AIzaSy"):
+            os.environ["GEMINI_API_KEY"] = api_key
+            os.environ.pop("GROQ_API_KEY", None)
+        elif api_key:
+            os.environ["GROQ_API_KEY"] = api_key
+            os.environ.pop("GEMINI_API_KEY", None)
     except Exception as e:
         print(f"[Settings] Erreur lors de l'écriture : {e}")
 
@@ -77,8 +82,22 @@ class SettingsDialog(QDialog):
         title.setObjectName("settings_title")
         lay.addWidget(title)
 
-        # ── Section 1 : Configuration de la Clé API (Retirée) ──
-        # L'utilisateur ne doit plus configurer l'API Key ici.
+        # ── Section 1 : Configuration de la Clé API ──
+        sec1_title = QLabel("🔑 Clé API (Groq ou Gemini)")
+        sec1_title.setObjectName("settings_section_hdr")
+        lay.addWidget(sec1_title)
+
+        self.api_key_input = QLineEdit(objectName="settings_input")
+        self.api_key_input.setPlaceholderText("gsk_... (Groq) ou AIzaSy... (Gemini)")
+        self.api_key_input.setFixedHeight(38)
+        self.api_key_input.setEchoMode(QLineEdit.Password)
+        self.api_key_input.setText(self._settings.get("api_key", ""))
+        lay.addWidget(self.api_key_input)
+
+        key_hint = QLabel("   💡 Groq (gsk_...) est gratuit sur console.groq.com — Gemini sur aistudio.google.com")
+        key_hint.setObjectName("settings_desc_lbl")
+        key_hint.setWordWrap(True)
+        lay.addWidget(key_hint)
 
         # ── Section 2 : Configuration du Sensei (Difficulté) ──
         sec2_title = QLabel("🧘 Comportement du Sensei IA")
@@ -152,8 +171,10 @@ class SettingsDialog(QDialog):
         lay.addLayout(btn_row)
 
     def _save(self):
+        # Récupérer la clé API
+        api_key = self.api_key_input.text().strip()
+
         # Récupérer la difficulté
-        
         difficulty = "beginner"
         if self.radio_int.isChecked():
             difficulty = "intermediate"
@@ -161,8 +182,8 @@ class SettingsDialog(QDialog):
             difficulty = "advanced"
 
         # Sauvegarder
-        # L'API key reste inchangée
         self._settings["ai_difficulty"] = difficulty
+        self._settings["api_key"] = api_key
         save_settings(self._settings)
 
         self.accept()

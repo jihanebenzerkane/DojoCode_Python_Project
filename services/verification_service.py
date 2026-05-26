@@ -57,7 +57,7 @@ class VerificationService:
                 cwd=temp_dir,
                 capture_output=True,
                 text=True,
-                shell=True
+                shell=False
             )
 
             if compile_process.returncode != 0:
@@ -79,7 +79,7 @@ class VerificationService:
                 cwd=temp_dir,
                 capture_output=True,
                 text=True,
-                shell=True,
+                shell=False,
                 timeout=5  # Évite les boucles infinies de l'élève
             )
 
