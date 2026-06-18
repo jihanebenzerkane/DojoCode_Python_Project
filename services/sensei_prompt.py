@@ -61,3 +61,16 @@ Expected concepts: {expected_concepts}
         if not code or not code.strip():
             return "[NO CODE SUBMITTED]"
         return f"Here is my current code:\n\n{code}"
+    # Dans services/sensei_prompt.py
+CODE_REVIEW_PROMPT = """Tu es un reviewer de code Java senior.
+Analyse ce code et donne UNIQUEMENT:
+1. Un score /10 sur la propreté
+2. 2-3 suggestions d'amélioration (style, naming, performance)
+3. Une question sur un choix de design
+
+Ne corrige pas le code. Fais réfléchir l'élève sur ses choix."""
+
+def review_code(code: str) -> dict:
+    # Appel API avec ce prompt
+    # Parse la réponse en structure JSON
+    pass

@@ -13,7 +13,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QFile, QTextStream, QThread, Signal, QUrl
 from PySide6.QtGui import QPainter, QPixmap, QColor, QImage
-from PySide6.QtMultimedia import QMediaPlayer, QVideoSink, QVideoFrame, QAudioOutput
+try:
+    from PySide6.QtMultimedia import QMediaPlayer, QVideoSink, QVideoFrame, QAudioOutput
+    _MULTIMEDIA_OK = True
+except Exception as _e:
+    print(f"[VideoBackground] QtMultimedia indisponible, fond statique utilisé : {_e}")
+    _MULTIMEDIA_OK = False
 
 from ui.status_bar import HeaderBar
 from ui.challenge_panel import ChallengePanel
@@ -38,21 +43,38 @@ class VideoBackgroundWidget(QWidget):
         self._bg_pixmap: QPixmap | None = None
 
         # Media player + sink (no QVideoWidget needed)
-        self._player = QMediaPlayer(self)
-        self._audio  = QAudioOutput(self)
-        self._audio.setVolume(0.0)        # background is muted
-        self._player.setAudioOutput(self._audio)
-        self._sink = QVideoSink(self)
-        self._player.setVideoOutput(self._sink)
-        self._player.setLoops(QMediaPlayer.Infinite)
-        self._sink.videoFrameChanged.connect(self._on_frame)
+        self._player = None
+        self._audio = None
+        self._sink = None
+        if _MULTIMEDIA_OK:
+            try:
+                self._player = QMediaPlayer(self)
+                self._audio  = QAudioOutput(self)
+                self._audio.setVolume(0.0)        # background is muted
+                self._player.setAudioOutput(self._audio)
+                self._sink = QVideoSink(self)
+                self._player.setVideoOutput(self._sink)
+                self._player.setLoops(QMediaPlayer.Infinite)
+                self._sink.videoFrameChanged.connect(self._on_frame)
+            except Exception as e:
+                print(f"[VideoBackground] Erreur init lecteur vidéo : {e}")
+                self._player = None
 
-        # Auto-start with first MP4 found
-        videos = sorted(f for f in os.listdir(self._assets) if f.endswith('.mp4'))
+        # Auto-start with first MP4 found (only if multimedia backend works)
+        # NOTE: vidéo de fond désactivée — le fichier 4K sature le thread UI
+        # et provoque un gel de l'application au rendu (paintEvent trop lourd).
+        DISABLE_VIDEO_BG = True
+        videos = []
+        if not DISABLE_VIDEO_BG and self._player is not None and os.path.isdir(self._assets):
+            videos = sorted(f for f in os.listdir(self._assets) if f.endswith('.mp4'))
         if videos:
             self.set_bg_path(os.path.join(self._assets, videos[0]))
         else:
-            self._bg_pixmap = QPixmap(os.path.join(self._assets, "app_bg.png"))
+            bg_path = os.path.join(self._assets, "app_bg.png")
+            if os.path.exists(bg_path):
+                self._bg_pixmap = QPixmap(bg_path)
+            else:
+                self._bg_pixmap = None
 
     # ── Slots ──────────────────────────────────────────────────────────────
 
@@ -64,12 +86,16 @@ class VideoBackgroundWidget(QWidget):
 
     def set_bg_path(self, path: str):
         if path.lower().endswith('.mp4'):
+            if self._player is None:
+                print("[VideoBackground] Lecteur vidéo indisponible, ignoré.")
+                return
             self._bg_pixmap = None
             self._current_frame = None
             self._player.setSource(QUrl.fromLocalFile(path))
             self._player.play()
         else:
-            self._player.stop()
+            if self._player is not None:
+                self._player.stop()
             self._current_frame = None
             self._bg_pixmap = QPixmap(path)
             self.update()

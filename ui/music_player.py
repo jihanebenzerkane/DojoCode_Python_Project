@@ -45,8 +45,7 @@ class MusicPlayerDialog(QDialog):
         self._progress_timer.timeout.connect(self._update_progress)
         self._progress_timer.start(500)
 
-    # ── Build ──────────────────────────────────────────────────────────────
-
+   
     def _build(self):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 14)
