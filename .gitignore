@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Environnements
+venv/
+env/
+.venv/
+
+# Secrets
+.env
+*.env
+settings.json
+
+# Données
+*.db
+*.sqlite3
+*.csv
+*.xls
+*.xlsx
+
+# Assets lourds
+assets/*.mp4
+assets/*.avi
+assets/*.mov
+assets/*.png
+assets/*.jpg
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

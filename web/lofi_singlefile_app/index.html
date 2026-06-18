@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoFi Study Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-1: #11141f;
+      --bg-2: #1f2b2e;
+      --bg-3: #2d3c4c;
+      --panel: rgba(15, 15, 20, 0.8);
+      --panel-border: rgba(255, 195, 95, 0.42);
+      --accent: #ffbf66;
+      --accent-soft: #ffe1a9;
+      --text: #f6f0e6;
+      --muted: #cabba0;
+      --bar: #ffd08a;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      color: var(--text);
+      font-family: "Nunito", sans-serif;
+      background: #0f1118;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -4;
+    }
+
+    #videoBg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      filter: saturate(1.05) brightness(0.75);
+    }
+
+    #pixelBg {
+      background:
+        radial-gradient(circle at 80% 20%, rgba(255, 223, 120, 0.15), transparent 30%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2) 45%, var(--bg-3));
+    }
+
+    #pixelBg::before,
+    #pixelBg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      image-rendering: pixelated;
+    }
+    #pixelBg::before {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 12px 12px;
+      opacity: 0.5;
+      animation: drift 20s linear infinite;
+    }
+    #pixelBg::after {
+      background:
+        repeating-linear-gradient(120deg, transparent 0 46px, rgba(255,255,255,0.02) 46px 48px),
+        repeating-linear-gradient(60deg, transparent 0 62px, rgba(255,223,120,0.03) 62px 64px);
+      animation: driftReverse 28s linear infinite;
+    }
+
+    @keyframes drift {
+      from { transform: translateY(0px); }
+      to { transform: translateY(12px); }
+    }
+    @keyframes driftReverse {
+      from { transform: translateX(0px); }
+      to { transform: translateX(-16px); }
+    }
+
+    #rainOverlay {
+      background:
+        repeating-linear-gradient(
+          -75deg,
+          rgba(173, 216, 230, 0.0) 0px,
+          rgba(173, 216, 230, 0.0) 8px,
+          rgba(173, 216, 230, 0.22) 9px,
+          rgba(173, 216, 230, 0.22) 10px
+        );
+      opacity: 0;
+      transition: opacity 240ms ease;
+      pointer-events: none;
+      z-index: -2;
+    }
+    #rainOverlay.active {
+      opacity: 0.35;
+      animation: rainMove 420ms linear infinite;
+    }
+    @keyframes rainMove {
+      from { background-position: 0 0; }
+      to { background-position: -10px 30px; }
+    }
+
+    .layout {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px 12px;
+      align-items: center;
+    }
+
+    .title {
+      font-family: "Press Start 2P", cursive;
+      font-size: 13px;
+      color: var(--accent-soft);
+      text-shadow: 0 0 8px rgba(255, 191, 102, 0.35);
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .section {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-family: "Press Start 2P", cursive;
+      font-size: 10px;
+      color: var(--accent);
+      line-height: 1.5;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button, select, input, textarea {
+      font: inherit;
+      color: var(--text);
+      background: rgba(22, 22, 30, 0.85);
+      border: 1px solid rgba(255, 193, 107, 0.42);
+      border-radius: 7px;
+      padding: 7px 9px;
+    }
+    button {
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+    input[type="text"] {
+      width: 100%;
+      min-width: 160px;
+    }
+
+    .dropzone {
+      border: 1px dashed rgba(255, 210, 138, 0.55);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 64px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .dropzone.over {
+      border-color: var(--accent);
+      color: var(--accent-soft);
+      background: rgba(255, 193, 107, 0.08);
+    }
+
+    .track-card {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 58px;
+      border: 1px solid rgba(255, 193, 107, 0.28);
+      border-radius: 8px;
+      padding: 6px;
+      background: rgba(0,0,0,0.16);
+    }
+    .track-card img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.4);
+    }
+    .track-title {
+      margin: 0;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent-soft);
+    }
+    .track-artist {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #spotifyWrap {
+      width: 100%;
+      min-height: 92px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.24);
+      display: none;
+    }
+    #spotifyWrap iframe {
+      border: none;
+      width: 100%;
+      height: 152px;
+    }
+
+    #visualizer {
+      width: 100%;
+      height: 70px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 193, 107, 0.38);
+      background: rgba(0, 0, 0, 0.25);
+      display: block;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+    }
+
+    #clock {
+      font-weight: 700;
+      color: var(--accent-soft);
+      text-align: right;
+    }
+
+    .hidden-ui .panel {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: all 180ms ease;
+    }
+    .hidden-ui #uiToggleSticky {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
+
+    #uiToggleSticky {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      opacity: 0.92;
+    }
+
+    @media (max-width: 1100px) {
+      .controls { grid-template-columns: 1fr; overflow: auto; }
+      .topbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button id="uiToggleSticky" title="Hide/Show UI">Toggle UI</button>
+
+  <div id="pixelBg" class="bg-layer"></div>
+  <video id="videoBg" class="bg-layer" autoplay muted loop playsinline></video>
+  <div id="rainOverlay" class="bg-layer"></div>
+
+  <main id="appRoot" class="layout">
+    <section class="topbar panel">
+      <div class="title">LOFI STUDY ROOM</div>
+      <div class="row">
+        <label class="muted" for="sceneSelect">Scene:</label>
+        <select id="sceneSelect">
+          <option>Cozy Cafe</option>
+          <option>Night Study</option>
+          <option>Rainy Window</option>
+          <option>Forest Cabin</option>
+          <option>Sakura Park</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="controls">
+      <article class="section panel">
+        <h2>Background Video</h2>
+        <p class="muted">Load your own MP4/WebM; pixel art background stays as fallback.</p>
+        <div id="videoDrop" class="dropzone">Drop MP4/WebM here</div>
+        <div class="row">
+          <input id="videoPicker" type="file" accept="video/mp4,video/webm" hidden />
+          <button id="pickVideoBtn">Pick Video</button>
+          <button id="clearVideoBtn">Use Pixel Fallback</button>
+        </div>
+        <p id="videoStatus" class="muted">No custom video loaded.</p>
+      </article>
+
+      <article class="section panel">
+        <h2>Music Player</h2>
+        <div class="row">
+          <label><input type="radio" name="musicMode" value="import" checked /> Import</label>
+          <label><input type="radio" name="musicMode" value="spotify" /> Spotify Embed</label>
+        </div>
+
+        <div id="importMode">
+          <div id="audioDrop" class="dropzone">Drop MP3/WAV here</div>
+          <div class="row">
+            <input id="audioPicker" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" hidden />
+            <button id="pickAudioBtn">Pick Audio</button>
+            <button id="playPauseBtn">Play / Pause</button>
+          </div>
+          <audio id="localAudio" preload="metadata"></audio>
+          <div class="track-card">
+            <img id="coverArt" alt="cover" />
+            <div>
+              <p id="trackTitle" class="track-title">No track loaded</p>
+              <p id="trackArtist" class="track-artist">Drop or pick an MP3/WAV file</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="spotifyMode" style="display:none;">
+          <input id="spotifyUrl" type="text" placeholder="Paste Spotify track/playlist URL" />
+          <div class="row">
+            <button id="embedSpotifyBtn">Embed Spotify</button>
+            <button id="clearSpotifyBtn">Clear Embed</button>
+          </div>
+          <div id="spotifyWrap"></div>
+        </div>
+      </article>
+
+      <article class="section panel">
+        <h2>Ambient</h2>
+        <div class="row">
+          <button id="rainToggleBtn">Rain Overlay: Off</button>
+          <button id="vizToggleBtn">Visualizer: On</button>
+        </div>
+        <canvas id="visualizer" width="520" height="70"></canvas>
+        <p class="muted">Visualizer reacts to imported local audio.</p>
+      </article>
+    </section>
+
+    <section class="footer panel">
+      <div class="muted">Zooties-style cozy pixel mood with warm amber accents.</div>
+      <div id="clock">--:--:--</div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+  <script>
+    const scenePalettes = {
+      "Cozy Cafe":  ["#15131d", "#2b2430", "#4e3f4d"],
+      "Night Study":["#0f1521", "#1e2a3f", "#334c72"],
+      "Rainy Window":["#121924", "#223246", "#3f5a71"],
+      "Forest Cabin":["#11170f", "#273427", "#475a3d"],
+      "Sakura Park": ["#241726", "#4a2e4d", "#845b8b"]
+    };
+
+    const appRoot = document.getElementById("appRoot");
+    const sceneSelect = document.getElementById("sceneSelect");
+    const videoBg = document.getElementById("videoBg");
+    const pixelBg = document.getElementById("pixelBg");
+    const videoPicker = document.getElementById("videoPicker");
+    const videoDrop = document.getElementById("videoDrop");
+    const videoStatus = document.getElementById("videoStatus");
+    const pickVideoBtn = document.getElementById("pickVideoBtn");
+    const clearVideoBtn = document.getElementById("clearVideoBtn");
+    const rainOverlay = document.getElementById("rainOverlay");
+    const rainToggleBtn = document.getElementById("rainToggleBtn");
+    const uiToggleSticky = document.getElementById("uiToggleSticky");
+    const vizToggleBtn = document.getElementById("vizToggleBtn");
+    const visualizer = document.getElementById("visualizer");
+    const ctx = visualizer.getContext("2d");
+    const clockEl = document.getElementById("clock");
+
+    const localAudio = document.getElementById("localAudio");
+    const audioPicker = document.getElementById("audioPicker");
+    const audioDrop = document.getElementById("audioDrop");
+    const pickAudioBtn = document.getElementById("pickAudioBtn");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const trackTitle = document.getElementById("trackTitle");
+    const trackArtist = document.getElementById("trackArtist");
+    const coverArt = document.getElementById("coverArt");
+
+    const importMode = document.getElementById("importMode");
+    const spotifyMode = document.getElementById("spotifyMode");
+    const spotifyUrl = document.getElementById("spotifyUrl");
+    const embedSpotifyBtn = document.getElementById("embedSpotifyBtn");
+    const clearSpotifyBtn = document.getElementById("clearSpotifyBtn");
+    const spotifyWrap = document.getElementById("spotifyWrap");
+    const modeRadios = [...document.querySelectorAll('input[name="musicMode"]')];
+
+    let bgVideoUrl = "";
+    let audioObjectUrl = "";
+    let rainOn = false;
+    let vizOn = true;
+    let audioCtx = null;
+    let analyser = null;
+    let sourceNode = null;
+    let dataArray = null;
+    let rafId = null;
+
+    function applyScene(name) {
+      const palette = scenePalettes[name] || scenePalettes["Cozy Cafe"];
+      document.documentElement.style.setProperty("--bg-1", palette[0]);
+      document.documentElement.style.setProperty("--bg-2", palette[1]);
+      document.documentElement.style.setProperty("--bg-3", palette[2]);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const date = now.toLocaleDateString([], { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+      clockEl.textContent = `${time} | ${date}`;
+    }
+
+    function setVideoSource(file) {
+      if (!file) return;
+      const okTypes = ["video/mp4", "video/webm"];
+      if (!okTypes.includes(file.type)) {
+        videoStatus.textContent = "Please load an MP4 or WebM video.";
+        return;
+      }
+      if (bgVideoUrl) URL.revokeObjectURL(bgVideoUrl);
+      bgVideoUrl = URL.createObjectURL(file);
+      videoBg.src = bgVideoUrl;
+      videoBg.style.display = "block";
+      pixelBg.style.opacity = "0.45";
+      videoStatus.textContent = `Video loaded: ${file.name}`;
+      videoBg.play().catch(() => {});
+    }
+
+    function clearVideo() {
+      if (bgVideoUrl) URL.revokeObjectURL(bgVideoUrl);
+      bgVideoUrl = "";
+      videoBg.pause();
+      videoBg.removeAttribute("src");
+      videoBg.load();
+      videoBg.style.display = "none";
+      pixelBg.style.opacity = "1";
+      videoStatus.textContent = "No custom video loaded.";
+    }
+
+    function toggleDropState(el, over) {
+      el.classList.toggle("over", over);
+    }
+
+    function wireDropzone(el, onFile, acceptPrefix) {
+      ["dragenter", "dragover"].forEach((evt) => {
+        el.addEventListener(evt, (e) => {
+          e.preventDefault();
+          toggleDropState(el, true);
+        });
+      });
+      ["dragleave", "drop"].forEach((evt) => {
+        el.addEventListener(evt, (e) => {
+          e.preventDefault();
+          toggleDropState(el, false);
+        });
+      });
+      el.addEventListener("drop", (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        if (acceptPrefix && !file.type.startsWith(acceptPrefix)) return;
+        onFile(file);
+      });
+    }
+
+    function setupAudioGraph() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 128;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      sourceNode = audioCtx.createMediaElementSource(localAudio);
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function setCoverFromPicture(picture) {
+      if (!picture || !picture.data || !picture.data.length) {
+        coverArt.removeAttribute("src");
+        return;
+      }
+      const bytes = new Uint8Array(picture.data);
+      const blob = new Blob([bytes], { type: picture.format || "image/jpeg" });
+      coverArt.src = URL.createObjectURL(blob);
+    }
+
+    function readAudioMetadata(file) {
+      if (!window.jsmediatags) return;
+      window.jsmediatags.read(file, {
+        onSuccess: ({ tags }) => {
+          trackTitle.textContent = tags.title || file.name;
+          trackArtist.textContent = tags.artist || "Unknown artist";
+          setCoverFromPicture(tags.picture);
+        },
+        onError: () => {
+          trackTitle.textContent = file.name;
+          trackArtist.textContent = "Metadata unavailable";
+          coverArt.removeAttribute("src");
+        }
+      });
+    }
+
+    function loadAudioFile(file) {
+      const valid = ["audio/mpeg", "audio/wav", "audio/x-wav"];
+      const byName = /\.(mp3|wav)$/i.test(file.name);
+      if (!valid.includes(file.type) && !byName) {
+        trackTitle.textContent = "Unsupported audio format";
+        trackArtist.textContent = "Please use MP3 or WAV.";
+        return;
+      }
+
+      if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
+      audioObjectUrl = URL.createObjectURL(file);
+      localAudio.src = audioObjectUrl;
+      localAudio.load();
+      readAudioMetadata(file);
+      setupAudioGraph();
+
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
+      localAudio.play().catch(() => {});
+    }
+
+    function drawVisualizer() {
+      if (!vizOn) {
+        ctx.clearRect(0, 0, visualizer.width, visualizer.height);
+        return;
+      }
+      rafId = requestAnimationFrame(drawVisualizer);
+      ctx.clearRect(0, 0, visualizer.width, visualizer.height);
+
+      if (!analyser || localAudio.paused) {
+        ctx.fillStyle = "rgba(255,208,138,0.22)";
+        for (let i = 0; i < 28; i++) {
+          const x = i * 18 + 8;
+          ctx.fillRect(x, 56, 11, 6);
+        }
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+      const bars = dataArray.length;
+      const barW = visualizer.width / bars;
+      for (let i = 0; i < bars; i++) {
+        const v = dataArray[i] / 255;
+        const h = Math.max(4, v * (visualizer.height - 10));
+        const x = i * barW;
+        const y = visualizer.height - h;
+        ctx.fillStyle = `rgba(255, 208, 138, ${0.25 + v * 0.75})`;
+        ctx.fillRect(x + 2, y, Math.max(4, barW - 4), h);
+      }
+    }
+
+    function spotifyToEmbed(url) {
+      try {
+        const u = new URL(url.trim());
+        if (!u.hostname.includes("spotify.com")) return "";
+        const parts = u.pathname.split("/").filter(Boolean);
+        const kind = parts[0];
+        const id = parts[1];
+        if (!kind || !id) return "";
+        const validKind = ["track", "playlist", "album", "episode", "show"];
+        if (!validKind.includes(kind)) return "";
+        return `https://open.spotify.com/embed/${kind}/${id}`;
+      } catch {
+        return "";
+      }
+    }
+
+    sceneSelect.addEventListener("change", () => applyScene(sceneSelect.value));
+    pickVideoBtn.addEventListener("click", () => videoPicker.click());
+    videoPicker.addEventListener("change", () => setVideoSource(videoPicker.files[0]));
+    clearVideoBtn.addEventListener("click", clearVideo);
+
+    rainToggleBtn.addEventListener("click", () => {
+      rainOn = !rainOn;
+      rainOverlay.classList.toggle("active", rainOn);
+      rainToggleBtn.textContent = `Rain Overlay: ${rainOn ? "On" : "Off"}`;
+    });
+
+    uiToggleSticky.addEventListener("click", () => {
+      document.body.classList.toggle("hidden-ui");
+    });
+
+    vizToggleBtn.addEventListener("click", () => {
+      vizOn = !vizOn;
+      vizToggleBtn.textContent = `Visualizer: ${vizOn ? "On" : "Off"}`;
+      if (!vizOn && rafId) cancelAnimationFrame(rafId);
+      if (vizOn && !rafId) drawVisualizer();
+    });
+
+    pickAudioBtn.addEventListener("click", () => audioPicker.click());
+    audioPicker.addEventListener("change", () => loadAudioFile(audioPicker.files[0]));
+    playPauseBtn.addEventListener("click", async () => {
+      if (!localAudio.src) return;
+      setupAudioGraph();
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
+      if (localAudio.paused) {
+        localAudio.play().catch(() => {});
+      } else {
+        localAudio.pause();
+      }
+    });
+
+    modeRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        const isImport = radio.value === "import" && radio.checked;
+        importMode.style.display = isImport ? "block" : "none";
+        spotifyMode.style.display = isImport ? "none" : "block";
+      });
+    });
+
+    embedSpotifyBtn.addEventListener("click", () => {
+      const embed = spotifyToEmbed(spotifyUrl.value);
+      if (!embed) {
+        spotifyWrap.style.display = "none";
+        spotifyWrap.innerHTML = "";
+        return;
+      }
+      spotifyWrap.style.display = "block";
+      spotifyWrap.innerHTML = `<iframe src="${embed}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+    });
+
+    clearSpotifyBtn.addEventListener("click", () => {
+      spotifyUrl.value = "";
+      spotifyWrap.style.display = "none";
+      spotifyWrap.innerHTML = "";
+    });
+
+    wireDropzone(videoDrop, setVideoSource, "video/");
+    wireDropzone(audioDrop, loadAudioFile, "audio/");
+
+    applyScene(sceneSelect.value);
+    updateClock();
+    setInterval(updateClock, 1000);
+    drawVisualizer();
+  </script>
+</body>
+</html>
